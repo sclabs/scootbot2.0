@@ -1,0 +1,26 @@
+{
+  "name": "scootbot",
+  "version": "1.0.0",
+  "description": "custom multi-purpose slack chatbot",
+  "main": "app.js",
+  "dependencies": {
+    "botkit": "^0.2.2",
+    "forever": "^0.15.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "serve": "forever start app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sclabs/scootbot2.0.git"
+  },
+  "author": "Thomas Gilgenast",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sclabs/scootbot2.0/issues"
+  },
+  "homepage": "https://github.com/sclabs/scootbot2.0#readme"
+}
