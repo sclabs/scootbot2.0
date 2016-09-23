@@ -4,8 +4,7 @@
   "description": "custom multi-purpose slack chatbot",
   "main": "app.js",
   "dependencies": {
-    "botkit": "^0.2.2",
-    "forever": "^0.15.2"
+    "botkit": "^0.2.2"
   },
   "devDependencies": {},
   "scripts": {
