@@ -255,6 +255,39 @@ function aotdSpreadsheet(bot, message) {
     bot.reply(message, 'https://docs.google.com/spreadsheets/d/1vA8z1uV6LLDmcSYty8toxYGF1ZcYGdnbQoBzuAqb92U');
 }
 
+function aotdSubmit(bot, message) {
+    console.log('triggered');
+    var userMapping = {
+        'gilgi': 'gilgi',
+        'thelolpatrol': 'nd',
+        'tritz': 'tritz',
+        'drkwint': 'kwint',
+        'sauceboss': 'mark',
+        'sc_holiday': 'sehi',
+        'vindicator-': 'vindi'
+    };
+    if (message.match[1] && message.match[2] && message.match[3]) {
+        bot.api.users.info({user: message.user}, function (err, info) {
+            console.log('https://script.google.com/macros/s/AKfycbxZe3OukuZO20ahND9o4mgauaKA7dfFAgjPMFiObc6aYFISO-JQ/' +
+                'exec?submit=1&user=' + userMapping[info.user.name] + '&album=' + message.match[1] + '&artist=' +
+                message.match[2] + '&link=' + message.match[3]);
+            request({
+                url: 'https://script.google.com/macros/s/AKfycbxZe3OukuZO20ahND9o4mgauaKA7dfFAgjPMFiObc6aYFISO-JQ/' +
+                'exec?submit=1&user=' + userMapping[info.user.name] + '&album=' + message.match[1] + '&artist=' +
+                message.match[2] + '&link=' + message.match[3],
+                json: true
+            }, function (error, response, body) {
+                if (!error && response.statusCode === 200) {
+                    bot.reply(message, body.text);
+                }
+                else {
+                    bot.reply(message, 'error encountered');
+                }
+            });
+        })
+    }
+}
+
 function scp(bot, message) {
     bot.reply(message, 'http://www.scp-wiki.net/scp-' + ("000" + getRandomIntInclusive(1, 2257)).slice(-4));
 }
@@ -340,20 +373,23 @@ function osustats(bot, message) {
     });
 }
 
-controller.hears('^!sayhi$', ['ambient'], hello);
-controller.hears('^!echo()(.*)', ['ambient'], echo);
-controller.hears('^!flipcoin$', ['ambient'], flipcoin);
-controller.hears('^!rtd( )?([0-9]+)?$', ['ambient'], rtd);
-controller.hears('^!pickone (.*) or (.*)$', ['ambient'], pickone);
-controller.hears('^!dota$', ['ambient'], dota);
-controller.hears(['^!(.*)say$', '^!8(ball)'], ['ambient'], say);
-controller.hears('^!(dotabuff|yasp|opendota)( )?([^\\s\\\\]+)?$', ['ambient'], dotabuff);
-controller.hears('^!(jukebox|jb)( )?([^\\s\\\\]+)?$', ['ambient'], jukebox);
-controller.hears('^!wolfram (.*)$', ['ambient'], wolfram);
-controller.hears('^!aotd$', ['ambient'], aotd);
-controller.hears('^!aotd throwback$', ['ambient'], aotdThrowback);
-controller.hears('^!aotd spreadsheet$', ['ambient'], aotdSpreadsheet);
-controller.hears('^!scp$', ['ambient'], scp);
-controller.hears('^!draft( )?(.*)?$', ['ambient'], draft);
-controller.hears('^!osustats (.*)$', ['ambient'], osustats);
-controller.hears('^!osu (.*)$', ['ambient'], osu);
+var defaultContexts= ['ambient', 'direct_message'];
+
+controller.hears('^!sayhi$', defaultContexts, hello);
+controller.hears('^!echo()(.*)', defaultContexts, echo);
+controller.hears('^!flipcoin$', defaultContexts, flipcoin);
+controller.hears('^!rtd( )?([0-9]+)?$', defaultContexts, rtd);
+controller.hears('^!pickone (.*) or (.*)$', defaultContexts, pickone);
+controller.hears('^!dota$', defaultContexts, dota);
+controller.hears(['^!(.*)say$', '^!8(ball)'], defaultContexts, say);
+controller.hears('^!(dotabuff|yasp|opendota)( )?([^\\s\\\\]+)?$', defaultContexts, dotabuff);
+controller.hears('^!(jukebox|jb)( )?([^\\s\\\\]+)?$', defaultContexts, jukebox);
+controller.hears('^!wolfram (.*)$', defaultContexts, wolfram);
+controller.hears('^.*aotd is (.*) by (.*) <(http.*)>.*$', defaultContexts, aotdSubmit);
+controller.hears('^!aotd$', defaultContexts, aotd);
+controller.hears('^!aotd throwback$', defaultContexts, aotdThrowback);
+controller.hears('^!aotd spreadsheet$', defaultContexts, aotdSpreadsheet);
+controller.hears('^!scp$', defaultContexts, scp);
+controller.hears('^!draft( )?(.*)?$', defaultContexts, draft);
+controller.hears('^!osustats (.*)$', defaultContexts, osustats);
+controller.hears('^!osu (.*)$', defaultContexts, osu);
