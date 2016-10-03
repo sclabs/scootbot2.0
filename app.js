@@ -256,7 +256,6 @@ function aotdSpreadsheet(bot, message) {
 }
 
 function aotdSubmit(bot, message) {
-    console.log('triggered');
     var userMapping = {
         'gilgi': 'gilgi',
         'thelolpatrol': 'nd',
@@ -268,9 +267,6 @@ function aotdSubmit(bot, message) {
     };
     if (message.match[1] && message.match[2] && message.match[3]) {
         bot.api.users.info({user: message.user}, function (err, info) {
-            console.log('https://script.google.com/macros/s/AKfycbxZe3OukuZO20ahND9o4mgauaKA7dfFAgjPMFiObc6aYFISO-JQ/' +
-                'exec?submit=1&user=' + userMapping[info.user.name] + '&album=' + message.match[1] + '&artist=' +
-                message.match[2] + '&link=' + message.match[3]);
             request({
                 url: 'https://script.google.com/macros/s/AKfycbxZe3OukuZO20ahND9o4mgauaKA7dfFAgjPMFiObc6aYFISO-JQ/' +
                 'exec?submit=1&user=' + userMapping[info.user.name] + '&album=' + message.match[1] + '&artist=' +
