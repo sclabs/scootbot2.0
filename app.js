@@ -27,6 +27,12 @@ function hello(bot, message) {
     })
 }
 
+function echo(bot, message) {
+    if (message.match[2]) {
+        bot.reply(message, message.match[2])
+    }
+}
+
 function flipcoin(bot, message) {
     if (Math.random() < 0.5) {
         bot.reply(message, 'heads');
@@ -113,8 +119,12 @@ function dotabuff(bot, message) {
         'vindi': 37784737,
         'kwint': 47374215
     };
-    if (message.match[2]) {
-        var user = message.match[2];
+    var baseURL = 'https://dotabuff.com/matches/';
+    if (message.match[1] == 'yasp' || message.match[1] == 'opendota') {
+        baseURL = 'https://opendota.com/matches/';
+    }
+    if (message.match[3]) {
+        var user = message.match[3];
         if (user in userMapping) {
             request({
                 url: 'https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/V001/?key=' +
@@ -122,7 +132,7 @@ function dotabuff(bot, message) {
                 json: true
             }, function (error, response, body) {
                 if (!error && response.statusCode === 200) {
-                    bot.reply(message, 'https://dotabuff.com/matches/' +
+                    bot.reply(message, baseURL +
                         body.result.matches[0].match_id);
                 }
                 else {
@@ -149,7 +159,7 @@ function dotabuff(bot, message) {
                             matchIDs.push(body.result.matches[i].match_id);
                         }
                         if (--pendingRequests == 0) {
-                            bot.reply(message, 'https://dotabuff.com/matches/' +
+                            bot.reply(message, baseURL +
                                 matchIDs[getRandomIntInclusive(0, matchIDs.length - 1)]);
                         }
                     }
@@ -283,8 +293,7 @@ function osu(bot, message) {
         user = userMapping[user];
     }
     request({
-        url: 'https://osu.ppy.sh/api/get_user_recent?k=' + process.env.OSU_API_KEY + '&u=' + userMapping[user] +
-            '&limit=1',
+        url: 'https://osu.ppy.sh/api/get_user_recent?k=' + process.env.OSU_API_KEY + '&u=' + user + '&limit=1',
         json: true
     }, function (error, response, body) {
         if (!error && response.statusCode === 200 && body.length) {
@@ -297,8 +306,7 @@ function osu(bot, message) {
                 '\nRank: ' + body[0].rank +
                 '\nMax Combo: ' + body[0].maxcombo + 'x' + perfectString +
                 '\n300/100/50: ' + body[0].count300 + ' / ' +  body[0].count100 + ' / ' + body[0].count50 +
-                '\nMisses: ' + body[0].countmiss +
-                '\npp: ' + body[0].pp);
+                '\nMisses: ' + body[0].countmiss);
         }
         else {
             bot.reply(message, 'error encountered');
@@ -333,12 +341,13 @@ function osustats(bot, message) {
 }
 
 controller.hears('^!sayhi$', ['ambient'], hello);
+controller.hears('^!echo()(.*)', ['ambient'], echo);
 controller.hears('^!flipcoin$', ['ambient'], flipcoin);
 controller.hears('^!rtd( )?([0-9]+)?$', ['ambient'], rtd);
 controller.hears('^!pickone (.*) or (.*)$', ['ambient'], pickone);
 controller.hears('^!dota$', ['ambient'], dota);
 controller.hears(['^!(.*)say$', '^!8(ball)'], ['ambient'], say);
-controller.hears('^!dotabuff( )?([^\\s\\\\]+)?$', ['ambient'], dotabuff);
+controller.hears('^!(dotabuff|yasp|opendota)( )?([^\\s\\\\]+)?$', ['ambient'], dotabuff);
 controller.hears('^!(jukebox|jb)( )?([^\\s\\\\]+)?$', ['ambient'], jukebox);
 controller.hears('^!wolfram (.*)$', ['ambient'], wolfram);
 controller.hears('^!aotd$', ['ambient'], aotd);
