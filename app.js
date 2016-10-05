@@ -369,6 +369,17 @@ function osustats(bot, message) {
     });
 }
 
+function z0r(bot, message) {
+    bot.startConversation(message,function(err, convo) {
+        convo.ask('0',function(response, convo) {
+            if (response.text == 'r') {
+                convo.say('my z0r chain backboan');
+                convo.next();
+            }
+        });
+    })
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -389,3 +400,4 @@ controller.hears('^!scp$', defaultContexts, scp);
 controller.hears('^!draft( )?(.*)?$', defaultContexts, draft);
 controller.hears('^!osustats (.*)$', defaultContexts, osustats);
 controller.hears('^!osu (.*)$', defaultContexts, osu);
+controller.hears('^z$', defaultContexts, z0r);
