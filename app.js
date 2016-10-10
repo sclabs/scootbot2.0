@@ -369,6 +369,18 @@ function osustats(bot, message) {
     });
 }
 
+function latex(bot, message) {
+    bot.reply(message, {
+        'attachments': [
+            {
+                'fallback': message.match[1],
+                'image_url':
+                'http://latex.codecogs.com/png.latex?%5Cdpi%7B300%7D%20' + encodeURIComponent(message.match[1])
+            }
+        ]
+    });
+}
+
 function z0r(bot, message) {
     bot.startConversation(message,function(err, convo) {
         convo.ask('0',function(response, convo) {
@@ -400,4 +412,5 @@ controller.hears('^!scp$', defaultContexts, scp);
 controller.hears('^!draft( )?(.*)?$', defaultContexts, draft);
 controller.hears('^!osustats (.*)$', defaultContexts, osustats);
 controller.hears('^!osu (.*)$', defaultContexts, osu);
+controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('^z$', defaultContexts, z0r);
