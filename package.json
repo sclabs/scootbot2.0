@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/sclabs/scootbot2.0/issues"
   },
-  "homepage": "https://github.com/sclabs/scootbot2.0#readme"
+  "homepage": "https://github.com/sclabs/scootbot2.0#readme",
+  "optionalDependencies": {
+    "githubhook": "^1.7.1"
+  }
 }
