@@ -8,7 +8,7 @@ var github = githubhook({
 
 github.listen();
 
-github.on('push:scootbot2.0:master', function (event, repo, ref, data) {
+github.on('push:scootbot2.0:refs/heads/master', function (event, repo, ref, data) {
     console.log('updating');
     exec('git pull', function(error, stdout, stderr) {
         console.log('restarting');
