@@ -15,6 +15,7 @@ Quick start
         export SCOOTBOT_TOKEN=...
         export OSU_API_KEY=...
         export STEAM_API_KEY=...
+        export SCOOTBOT_WEBHOOK_SECRET=...
 
 3. Install core dependencies with
 
@@ -30,4 +31,4 @@ Quick start
 
 6. Run the bot in the background with
 
-        forever start app.js
+        npm run forever
