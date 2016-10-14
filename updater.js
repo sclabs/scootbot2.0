@@ -11,9 +11,13 @@ github.listen();
 github.on('push:scootbot2.0:refs/heads/master', function (event, repo, ref, data) {
     console.log('updating');
     exec('git pull', function(error, stdout, stderr) {
-        console.log('restarting');
-        exec('forever restart app.js', function(error, stdout, stderr) {
-            console.log('restarted');
-        })
+        console.log('updating dependencies');
+        exec('npm install', function(error, stdout, stderr) {
+            console.log('restarting');
+            exec('forever restart app.js', function(error, stdout, stderr) {
+                console.log('restarted');
+            })
+        });
+
     });
 });
