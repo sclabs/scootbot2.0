@@ -369,6 +369,21 @@ function osustats(bot, message) {
     });
 }
 
+function wowstats(bot, message) {
+    var user = message.match[1];
+    var userMapping = {
+        'gilgi': '1014711813/Gilgi',
+        'vindi': '1014713094/scVindicatoR',
+        'kwint': '1014712850/PQman23'
+    };
+    if (user in userMapping) {
+        bot.reply(message, 'https://na.warships.today/player/' + userMapping[user]);
+    }
+    else {
+        bot.reply(message, 'user not recognized')
+    }
+}
+
 function latex(bot, message) {
     bot.reply(message, {
         'attachments': [
@@ -412,5 +427,6 @@ controller.hears('^!scp$', defaultContexts, scp);
 controller.hears('^!draft( )?(.*)?$', defaultContexts, draft);
 controller.hears('^!osustats (.*)$', defaultContexts, osustats);
 controller.hears('^!osu (.*)$', defaultContexts, osu);
+controller.hears('^!wowstats (.*)$', defaultContexts, wowstats);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('^z$', defaultContexts, z0r);
