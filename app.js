@@ -400,8 +400,21 @@ var z0rstate = 'no';
 
 function z0r(bot, message) {
     if (z0rstate == 'no' && message.match[1] == 'z') {
-        bot.reply(message, '0');
-        z0rstate = '0';
+        if (Math.random() < 0.5) {
+            bot.reply(message, '0');
+            z0rstate = '0';
+        }
+        else {
+            z0rstate = 'z';
+        }
+    }
+    else if (z0rstate == 'z') {
+        if (message.match[1] == '0') {
+            z0rstate = '0';
+        }
+        else {
+            z0rstate = 'no';
+        }
     }
     else if (z0rstate == '0') {
         if (message.match[1] == 'r') {
