@@ -396,15 +396,26 @@ function latex(bot, message) {
     });
 }
 
+var z0rstate = 'no';
+
 function z0r(bot, message) {
-    bot.startConversation(message,function(err, convo) {
-        convo.ask('0',function(response, convo) {
-            if (response.text == 'r') {
-                convo.say('my z0r chain backboan');
-                convo.next();
-            }
-        });
-    })
+    if (z0rstate == 'no' && message.match[1] == 'z') {
+        bot.reply(message, '0');
+        z0rstate = '0';
+    }
+    else if (z0rstate == '0') {
+        if (message.match[1] == 'r') {
+            bot.reply(message, 'my z0r chain backboan');
+        }
+        z0rstate = 'no';
+    }
+    else {
+        z0rstate = 'no';
+    }
+}
+
+function updateStates(bot, message) {
+    z0r(bot, message);
 }
 
 var defaultContexts= ['ambient', 'direct_message'];
@@ -429,4 +440,4 @@ controller.hears('^!osustats (.*)$', defaultContexts, osustats);
 controller.hears('^!osu (.*)$', defaultContexts, osu);
 controller.hears('^!wowstats (.*)$', defaultContexts, wowstats);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
-controller.hears('^z$', defaultContexts, z0r);
+controller.hears('(.*)', ['ambient'], updateStates);
