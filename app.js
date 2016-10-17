@@ -379,6 +379,16 @@ function wowstats(bot, message) {
     };
     if (user in userMapping) {
         bot.reply(message, 'https://na.warships.today/player/' + userMapping[user]);
+        bot.reply(message, {
+            'attachments': [
+                {
+                    'title_url': 'https://na.warships.today/player/' + userMapping[user],
+                    'fallback': 'world of warships stats for ' + user,
+                    'image_url': 'http://na.warshipstoday.com/signature/' + userMapping[user].split('/')[0] +
+                    '/dark.png'
+                }
+            ]
+        });
     }
     else {
         bot.reply(message, 'user not recognized')
@@ -452,6 +462,6 @@ controller.hears('^!scp$', defaultContexts, scp);
 controller.hears('^!draft( )?(.*)?$', defaultContexts, draft);
 controller.hears('^!osustats (.*)$', defaultContexts, osustats);
 controller.hears('^!osu (.*)$', defaultContexts, osu);
-controller.hears('^!wowstats (.*)$', defaultContexts, wowstats);
+controller.hears('^!wowstatstest (.*)$', defaultContexts, wowstats);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
