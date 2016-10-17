@@ -374,7 +374,8 @@ function wowstats(bot, message) {
     var userMapping = {
         'gilgi': '1014711813/Gilgi',
         'vindi': '1014713094/scVindicatoR',
-        'kwint': '1014712850/PQman23'
+        'kwint': '1014712850/PQman23',
+        'tritz': '1022611617/manlytomb'
     };
     if (user in userMapping) {
         bot.reply(message, 'https://na.warships.today/player/' + userMapping[user]);
