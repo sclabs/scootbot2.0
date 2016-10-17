@@ -462,6 +462,6 @@ controller.hears('^!scp$', defaultContexts, scp);
 controller.hears('^!draft( )?(.*)?$', defaultContexts, draft);
 controller.hears('^!osustats (.*)$', defaultContexts, osustats);
 controller.hears('^!osu (.*)$', defaultContexts, osu);
-controller.hears('^!wowstatstest (.*)$', defaultContexts, wowstats);
+controller.hears('^!wowstats (.*)$', defaultContexts, wowstats);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
