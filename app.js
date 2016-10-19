@@ -438,8 +438,15 @@ function z0r(bot, message) {
     }
 }
 
+function antiTritz(bot, message) {
+    if (message.user == 'U1UV8B8UC') {
+        bot.api.reactions.add({'name': 'antitritz', 'channel': message.channel, 'timestamp': message.ts});
+    }
+}
+
 function updateStates(bot, message) {
     z0r(bot, message);
+    antiTritz(bot, message);
 }
 
 var defaultContexts= ['ambient', 'direct_message'];
