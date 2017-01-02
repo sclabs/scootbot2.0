@@ -77,6 +77,7 @@ function say(bot, message) {
         'tk': '1-Wb6wUqoFDKmdTHBIEeFa4zObk1soQRKodcCnm3SlvE',
         'lam': '1vMZlG-8QoeO4y-O5YY7leULJ7vUfRMdR35hHA0hv2rY',
         'zusko': '1F_t5dU33qTKPRo2aJlvnU6VN3-WybgXz-l9ah4RfOXE',
+        'boomsy': '17P2RqkHeC9CV2lq_gz9nY1sqXDxKdErUzFYaOSovvA8',
         'space': '10lgnBeHKE3YTeokA5MoM6Qqs73PN8hvL1-yKJVxMM8I',
         'ball': '1SZ5XCkoYRhkI-i1M141UkUxvDpIN_5N4thjnBCWB3NI'
     };
@@ -117,7 +118,8 @@ function dotabuff(bot, message) {
         'tritz': 63826936,
         'sehi': 59311372,
         'vindi': 37784737,
-        'kwint': 47374215
+        'kwint': 47374215,
+        'boomsy': 14046169
     };
     var baseURL = 'https://dotabuff.com/matches/';
     if (message.match[1] == 'yasp' || message.match[1] == 'opendota') {
@@ -263,7 +265,8 @@ function aotdSubmit(bot, message) {
         'drkwint': 'kwint',
         'sauceboss': 'mark',
         'sc_holiday': 'sehi',
-        'vindicator-': 'vindi'
+        'vindicator-': 'vindi',
+        'boomsy': 'boomsy'
     };
     if (message.match[1] && message.match[2] && message.match[3]) {
         bot.api.users.info({user: message.user}, function (err, info) {
