@@ -452,6 +452,40 @@ function updateStates(bot, message) {
     antiTritz(bot, message);
 }
 
+function twitch(bot, message) {
+    var channels = ['scootscanoe', 'arteezy', 'sing_sing', 'sumaildoto', 'wagamamatv', 'purgegamers'];
+    channels.forEach(function(channel) {
+        request({
+            headers: {
+                'Accept': 'application/vnd.twitchtv.v3+json',
+                'Client-ID': process.env.SCOOTBOT_TWITCH_CLIENT_ID
+            },
+            url: 'https://api.twitch.tv/kraken/streams/' + channel,
+            json: true
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                if (body.stream) {
+                    bot.reply(message, {
+                        "attachments": [
+                            {
+                                'fallback': channel + ' is live with ' + body.stream.viewers + ' viewers',
+                                'title': channel,
+                                'title_link': 'https://twitch.tv/' + channel,
+                                'text': 'live with ' + body.stream.viewers + ' viewers',
+                                'thumb_url': body.stream.channel.logo,
+                                'image_url': body.stream.preview.large
+                            }
+                        ]
+                    });
+                }
+            }
+            else {
+                bot.reply(message, 'error encountered');
+            }
+        });
+    });
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -473,5 +507,6 @@ controller.hears('^!draft( )?(.*)?$', defaultContexts, draft);
 controller.hears('^!osustats (.*)$', defaultContexts, osustats);
 controller.hears('^!osu (.*)$', defaultContexts, osu);
 controller.hears('^!wowstats (.*)$', defaultContexts, wowstats);
+controller.hears('^!twitch', defaultContexts, twitch);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
