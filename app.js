@@ -453,7 +453,7 @@ function updateStates(bot, message) {
 }
 
 function twitch(bot, message) {
-    var channels = ['scootscanoe', 'arteezy', 'sing_sing', 'sumaildoto', 'wagamamatv', 'purgegamers'];
+    var channels = ['scootscanoe', 'manlytomb', 'arteezy', 'sing_sing', 'sumaildoto', 'wagamamatv', 'purgegamers'];
     channels.forEach(function(channel) {
         request({
             headers: {
