@@ -213,7 +213,7 @@ function wolfram(bot, message) {
             message.match[1],
         json: true
     }, function (error, response, body) {
-        if (!error && response.statusCode === 200) {
+        if (!error && response.statusCode === 200 && body && body.result) {
             bot.reply(message, body.result.join('\n'));
         }
         else {
