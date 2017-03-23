@@ -465,7 +465,9 @@ function debugState(bot, message) {
     stateString += 'z0rstate: ' + z0rstate + '\n';
 
     // add prevMessage
-    stateString += 'prevMessage: "' + prevMessage.text + '" sent by: ' + prevMessage.user + '\n';
+    if (prevMessage) {
+        stateString += 'prevMessage: "' + prevMessage.text + '" sent by: ' + prevMessage.user + '\n';
+    }
 
     // reply to the !debug request with stateString
     bot.reply(message, stateString);
