@@ -444,7 +444,7 @@ function z0r(bot, message) {
 var prevMessage = null;
 
 function antiTritz(bot, message) {
-    if (prevMessage && prevMessage.user == 'U1UV8B8UC' && Math.random() < 0.1) {
+    if (prevMessage && prevMessage.user == 'U1UV8B8UC' && Math.random() < 0.5) {
         bot.api.reactions.add({'name': 'antitritz', 'channel': prevMessage.channel, 'timestamp': prevMessage.ts});
     }
 }
