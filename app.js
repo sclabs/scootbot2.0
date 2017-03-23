@@ -441,15 +441,34 @@ function z0r(bot, message) {
     }
 }
 
+var prevMessage = null;
+
 function antiTritz(bot, message) {
-    if (message.user == 'U1UV8B8UC' && Math.random() < 0.1) {
-        bot.api.reactions.add({'name': 'antitritz', 'channel': message.channel, 'timestamp': message.ts});
+    if (prevMessage && prevMessage.user == 'U1UV8B8UC' && Math.random() < 0.1) {
+        bot.api.reactions.add({'name': 'antitritz', 'channel': prevMessage.channel, 'timestamp': prevMessage.ts});
     }
 }
 
 function updateStates(bot, message) {
-    z0r(bot, message);
-    antiTritz(bot, message);
+    if (message.channel == 'C1V01CFLM') {
+        z0r(bot, message);
+        prevMessage = message;
+        //antiTritz(bot, message);  historical landmark: antiTritz used to fire on every message
+    }
+}
+
+function debugState(bot, message) {
+    // declare stateString
+    var stateString = '';
+
+    // add z0rstate
+    stateString += 'z0rstate: ' + z0rstate + '\n';
+
+    // add prevMessage
+    stateString += 'prevMessage: "' + prevMessage.text + '" sent by: ' + prevMessage.user + '\n';
+
+    // reply to the !debug request with stateString
+    bot.reply(message, stateString);
 }
 
 var defaultContexts= ['ambient', 'direct_message'];
@@ -473,5 +492,7 @@ controller.hears('^!draft( )?(.*)?$', defaultContexts, draft);
 controller.hears('^!osustats (.*)$', defaultContexts, osustats);
 controller.hears('^!osu (.*)$', defaultContexts, osu);
 controller.hears('^!wowstats (.*)$', defaultContexts, wowstats);
+controller.hears('^!antitritz$', defaultContexts, antiTritz);
+controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
