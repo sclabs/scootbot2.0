@@ -507,6 +507,22 @@ function twitch(bot, message) {
     });
 }
 
+function eve(bot, message) {
+    bot.api.users.info({user: message.user}, function(err, info){
+        request({
+            url: 'https://script.google.com/macros/s/AKfycby3FMW3ajTZVeHcNcoS5fu4ivuN23naxgSNd_mlCkAmt2yGuyUL/exec?handle=' + info.user.name + '&command=' + message.match[1],
+            json: true
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200 && body && body.result && body.result.message) {
+                bot.reply(message, body.result.message);
+            }
+            else {
+                bot.reply(message, 'error encountered');
+            }
+        });
+    })
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -530,6 +546,7 @@ controller.hears('^!osu (.*)$', defaultContexts, osu);
 controller.hears('^!wowstats (.*)$', defaultContexts, wowstats);
 controller.hears('^!twitch', defaultContexts, twitch);
 controller.hears('^!antitritz$', defaultContexts, antiTritz);
+controller.hears('^!eve (.*)$', defaultContexts, eve);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
