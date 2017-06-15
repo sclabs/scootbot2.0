@@ -51,14 +51,8 @@ function rtd(bot, message) {
 }
 
 function pickone(bot, message) {
-    var a = message.match[1];
-    var b = message.match[2];
-    if (Math.random() < 0.5) {
-        bot.reply(message, a);
-    }
-    else {
-        bot.reply(message, b);
-    }
+    var options = message.match[1].split(' or ');
+    bot.reply(message, options[getRandomIntInclusive(0, options.length - 1)]);
 }
 
 function dota(bot, message) {
@@ -529,7 +523,7 @@ controller.hears('^!sayhi$', defaultContexts, hello);
 controller.hears('^!echo()(.*)', defaultContexts, echo);
 controller.hears('^!flipcoin$', defaultContexts, flipcoin);
 controller.hears('^!rtd( )?([0-9]+)?$', defaultContexts, rtd);
-controller.hears('^!pickone (.*) or (.*)$', defaultContexts, pickone);
+controller.hears('^!pickone (.*or.*)$', defaultContexts, pickone);
 controller.hears('^!dota$', defaultContexts, dota);
 controller.hears(['^!(.*)say$', '^!8(ball)'], defaultContexts, say);
 controller.hears('^!(dotabuff|yasp|opendota)( )?([^\\s\\\\]+)?$', defaultContexts, dotabuff);
