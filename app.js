@@ -518,7 +518,7 @@ function eve(bot, message) {
 }
 
 function cathy(bot, message) {
-    bot.reply(message, 'Secretary of State, Catharine Durant');
+    bot.reply(message, 'Secretary of State, Catherine Durant');
 }
 
 var defaultContexts= ['ambient', 'direct_message'];
