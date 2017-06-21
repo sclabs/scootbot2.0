@@ -517,6 +517,10 @@ function eve(bot, message) {
     })
 }
 
+function cathy(bot, message) {
+    bot.reply(message, 'Secretary of State, Catharine Durant');
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -541,6 +545,7 @@ controller.hears('^!wowstats (.*)$', defaultContexts, wowstats);
 controller.hears('^!twitch', defaultContexts, twitch);
 controller.hears('^!antitritz$', defaultContexts, antiTritz);
 controller.hears('^!eve (.*)$', defaultContexts, eve);
+controller.hears('^!cathy$', defaultContexts, cathy);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
