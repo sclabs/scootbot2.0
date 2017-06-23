@@ -521,6 +521,11 @@ function cathy(bot, message) {
     bot.reply(message, 'Secretary of State, Catherine Durant');
 }
 
+function sylvanas(bot, message) {
+    // I have no time for games! BWUHHH
+    bot.reply(message, 'https://www.youtube.com/watch?v=578a2SdwuSI');
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -546,6 +551,7 @@ controller.hears('^!twitch', defaultContexts, twitch);
 controller.hears('^!antitritz$', defaultContexts, antiTritz);
 controller.hears('^!eve (.*)$', defaultContexts, eve);
 controller.hears('^!cathy$', defaultContexts, cathy);
+controller.hears('^!sylvanas$', defaultContexts, sylvanas);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
