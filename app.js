@@ -543,7 +543,7 @@ function cloudHelp(bot, message) {
 
 function cloudStatus(bot, message) {
     exec('docker ps', function(error, stdout, stderr) {
-        bot.reply(message, "'''" + stdout + "'''");
+        bot.reply(message, "```" + stdout + "```");
     });
 }
 
