@@ -1,5 +1,6 @@
 var Botkit = require('botkit');
 var request = require("request");
+var exec = require('child_process').exec;
 
 if (!process.env.SCOOTBOT_TOKEN) {
     console.log('Error: Specify token in environment');
@@ -521,6 +522,83 @@ function cathy(bot, message) {
     bot.reply(message, 'Secretary of State, Catherine Durant');
 }
 
+var cloudHelpMessage = `
+\`!cloud status\`: shows you the output of \`docker ps\`
+
+\`!cloud register <subdomain>\`: registers a subdomain to a user
+
+\`!cloud deploy <subdomain> <repo>/<image>:<tag>\`:
+
+   - checks if user is authorized to deploy to \`<subdomain>\`
+   - \`docker rm --force <subdomain>\`
+   - \`docker pull <repo>/<image>:<tag>\`
+   - \`docker run -e VIRTUAL_HOST=<subdomain>.gilgi.org -d <repo>/<image>:<tag> -n <subdomain>\`
+
+\`!cloud help\`: prints this help message
+`
+
+function cloudHelp(bot, message) {
+    bot.reply(message, cloudHelpMessage);
+}
+
+function cloudStatus(bot, message) {
+    exec('docker ps', function(error, stdout, stderr) {
+        bot.reply(message, "'''" + stdout + "'''");
+    });
+}
+
+function cloudRegister(bot, message) {
+    var subdomain = message.match[1];
+    bot.api.users.info({user: message.user}, function(err, info){
+        request({
+            url: 'https://script.google.com/macros/s/AKfycbwytLZ0GR0ttQq66AgwnYmTc2gvQ4o3pAzfVzsXjHT21skQLXj4/exec?action=register&user=' + info.user.name + '&subdomain=' + subdomain,
+            json: true
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200 && body && body.result && body.result.message) {
+                bot.reply(message, body.result.message);
+            }
+            else {
+                bot.reply(message, 'error encountered');
+            }
+        });
+    });
+}
+
+function cloudDeploy(bot, message) {
+    var subdomain = message.match[1];
+    var dockerImage = message.match[2];
+    bot.api.users.info({user: message.user}, function(err, info){
+        request({
+            url: 'https://script.google.com/macros/s/AKfycbwytLZ0GR0ttQq66AgwnYmTc2gvQ4o3pAzfVzsXjHT21skQLXj4/exec?action=check&user=' + info.user.name + '&subdomain=' + subdomain,
+            json: true
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200 && body && body.result && body.result.message) {
+                if (body.result.message === 'authorized') {
+                    var cmd = 'docker rm --force ' + subdomain;
+                    console.log(cmd);
+                    exec(cmd, function(error, stdout, stderr) {
+                        var cmd = 'docker pull ' + dockerImage;
+                        console.log(cmd);
+                        exec(cmd, function(error, stdout, strerr) {
+                            var cmd = 'docker run -d -e VIRTUAL_HOST=' + subdomain + '.gilgi.org -n ' + subdomain + ' ' + dockerImage;
+                            console.log(cmd);
+                            exec(cmd, function(error, stdout, strerr) {
+                                bot.reply(message, 'deploy successful');
+                            });
+                        });
+                    });
+                }
+                else {
+                    bot.reply(message, 'you are not authorized to deploy to this subdomain');
+                }
+            }
+            else {
+                bot.reply(message, 'error encountered');
+            }
+        });
+    });
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -546,6 +624,10 @@ controller.hears('^!twitch', defaultContexts, twitch);
 controller.hears('^!antitritz$', defaultContexts, antiTritz);
 controller.hears('^!eve (.*)$', defaultContexts, eve);
 controller.hears('^!cathy$', defaultContexts, cathy);
+controller.hears('^!cloud help$', defaultContexts, cloudHelp);
+controller.hears('^!cloud status$', defaultContexts, cloudStatus);
+controller.hears('^!cloud register (.*)$', defaultContexts, cloudRegister);
+controller.hears('^!cloud deploy (.*) (.*)$', defaultContexts, cloudDeploy);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
