@@ -599,6 +599,11 @@ function cloudDeploy(bot, message) {
     });
 }
 
+function sylvanas(bot, message) {
+    // I have no time for games! BWUHHH
+    bot.reply(message, 'https://www.youtube.com/watch?v=578a2SdwuSI');
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -628,6 +633,7 @@ controller.hears('^!cloud help$', defaultContexts, cloudHelp);
 controller.hears('^!cloud status$', defaultContexts, cloudStatus);
 controller.hears('^!cloud register (.*)$', defaultContexts, cloudRegister);
 controller.hears('^!cloud deploy (.*) (.*)$', defaultContexts, cloudDeploy);
+controller.hears('^!sylvanas$', defaultContexts, sylvanas);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
