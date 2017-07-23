@@ -580,7 +580,11 @@ function cloudDeploy(bot, message) {
                         var cmd = 'docker pull ' + dockerImage;
                         console.log(cmd);
                         exec(cmd, function(error, stdout, strerr) {
-                            var cmd = 'docker run -d -e VIRTUAL_HOST=' + subdomain + '.gilgi.org -n ' + subdomain + ' ' + dockerImage;
+                            var cmd = 'docker run -d ' +
+                                '-e VIRTUAL_HOST=' + subdomain + '.gilgi.org ' +
+                                '-e LETSENCRYPT_HOST=' + subdomain + '.gilgi.org ' +
+                                '-e LETSENCRYPT_EMAIL=admin@gilgi.org ' +
+                                '-n ' + subdomain + ' ' + dockerImage;
                             console.log(cmd);
                             exec(cmd, function(error, stdout, strerr) {
                                 bot.reply(message, 'deploy successful');
