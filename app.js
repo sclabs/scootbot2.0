@@ -542,7 +542,7 @@ function cloudHelp(bot, message) {
 }
 
 function cloudStatus(bot, message) {
-    exec('docker ps', function(error, stdout, stderr) {
+    exec('docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"', function(error, stdout, stderr) {
         bot.reply(message, "```" + stdout + "```");
     });
 }
