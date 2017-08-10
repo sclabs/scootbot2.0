@@ -123,10 +123,10 @@ function dotabuff(bot, message) {
     }
     if (message.match[3]) {
         var user = message.match[3];
-        if (user in userMapping) {
+        if (user in steamUserMapping) {
             request({
                 url: 'https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/V001/?key=' +
-                    process.env.STEAM_API_KEY + '&account_id=' + userMapping[user],
+                    process.env.STEAM_API_KEY + '&account_id=' + steamUserMapping[user],
                 json: true
             }, function (error, response, body) {
                 if (!error && response.statusCode === 200) {
