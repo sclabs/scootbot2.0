@@ -16,6 +16,17 @@ var bot = controller.spawn({
     token: process.env.SCOOTBOT_TOKEN
 }).startRTM();
 
+var steamUserMapping = {
+    'gilgi': 30545806,
+    'mark': 60514096,
+    'nd': 34814716,
+    'tritz': 63826936,
+    'sehi': 59311372,
+    'vindi': 37784737,
+    'kwint': 47374215,
+    'boomsy': 14046169
+};
+
 function getRandomIntInclusive(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
@@ -106,16 +117,6 @@ function say(bot, message) {
 }
 
 function dotabuff(bot, message) {
-    var userMapping = {
-        'gilgi': 30545806,
-        'mark': 60514096,
-        'nd': 34814716,
-        'tritz': 63826936,
-        'sehi': 59311372,
-        'vindi': 37784737,
-        'kwint': 47374215,
-        'boomsy': 14046169
-    };
     var baseURL = 'https://dotabuff.com/matches/';
     if (message.match[1] == 'yasp' || message.match[1] == 'opendota') {
         baseURL = 'https://opendota.com/matches/';
@@ -143,12 +144,12 @@ function dotabuff(bot, message) {
     }
     else {
         var matchIDs = [];
-        var pendingRequests = Object.keys(userMapping).length;
-        for (var u in userMapping) {
-            if (userMapping.hasOwnProperty(u)) {
+        var pendingRequests = Object.keys(steamUserMapping).length;
+        for (var u in steamUserMapping) {
+            if (steamUserMapping.hasOwnProperty(u)) {
                 request({
                     url: 'https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/V001/?key=' +
-                        process.env.STEAM_API_KEY + '&account_id=' + userMapping[u],
+                        process.env.STEAM_API_KEY + '&account_id=' + steamUserMapping[u],
                     json: true
                 }, function (error, response, body) {
                     if (!error && response.statusCode === 200) {
@@ -167,6 +168,96 @@ function dotabuff(bot, message) {
             }
         }
     }
+}
+
+
+function resolveHeroNickname(nickname, callback) {
+    // url we will need
+    var heroNicknameTsvUrl = 'https://docs.google.com/spreadsheets/d/1z4rUK2tZkgqCWt-c5bShvm1ynZJDMrcC8W1gDW9rYcM/pub?gid=0&single=true&output=tsv';
+
+    request({url: heroNicknameTsvUrl}, function (error, response, body) {
+        // construct nicknameMap
+        var nicknameMap = {};
+        var lines = body.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            var pieces = line.split('\t');
+            if (pieces.length > 1) {
+                var nicknames = pieces[1].split(',');
+                for (var j = 0; j < nicknames.length; j++) {
+                    nicknameMap[nicknames[j].toLowerCase().trim()] = pieces[0].toLowerCase().trim();
+                }
+            }
+            nicknameMap[pieces[0].toLowerCase().trim()] = pieces[0].toLowerCase().trim();
+        }
+
+        // lookup
+        if (nickname in nicknameMap) {
+            return callback(nicknameMap[nickname]);
+        }
+        else {
+            return callback(null);
+        }
+    })
+}
+
+
+function resolveHeroNameToId(name, callback) {
+    // short-circuit
+    if (!name) {
+        return callback(null);
+    }
+
+    // url we will need
+    var heroIdJsonUrl ='https://api.opendota.com/api/heroes';
+
+    request({url: heroIdJsonUrl, json: true}, function (error, response, body) {
+        // construct idMap
+        var idMap = {};
+        for (var i = 0; i < body.length; i++) {
+            var hero = body[i];
+            idMap[hero.localized_name.toLowerCase()] = hero.id;
+        }
+
+        // lookup
+        if (name in idMap) {
+            return callback(idMap[name]);
+        }
+        else {
+            return callback(null);
+        }
+    })
+}
+
+
+function yaspstats(bot, message) {
+    // extract information from message
+    var userString = message.match[1];
+    var heroString = message.match[2];
+
+    resolveHeroNickname(heroString, function(heroname) {resolveHeroNameToId(heroname, function(heroId) {
+        var userId = 0;
+        if (userString in steamUserMapping) {
+            userId = steamUserMapping[userString];
+        }
+        else {
+            bot.reply(message, 'failed to resolve user name');
+            return;
+        }
+
+        // hit the yasp API
+        if (heroId) {
+            var statsUrl = 'https://api.opendota.com/api/players/' + userId + '/wl?hero_id=' + heroId;
+            request({url: statsUrl, json: true}, function (error, response, body) {
+                var totalGames = body.win + body.lose;
+                var percentage = Math.floor(100 * (body.win / totalGames));
+                bot.reply(message, body.win + '-' + body.lose + ' (' + percentage + '%)');
+            })
+        }
+        else {
+            bot.reply(message, 'failed to resolve hero name');
+        }
+    })});
 }
 
 function jukebox(bot, message) {
@@ -617,6 +708,7 @@ controller.hears('^!rtd( )?([0-9]+)?$', defaultContexts, rtd);
 controller.hears('^!pickone (.*or.*)$', defaultContexts, pickone);
 controller.hears('^!dota$', defaultContexts, dota);
 controller.hears(['^!(.*)say$', '^!8(ball)'], defaultContexts, say);
+controller.hears('^!yaspstats ([^\\s\\\\]+) (.*)$', defaultContexts, yaspstats);
 controller.hears('^!(dotabuff|yasp|opendota)( )?([^\\s\\\\]+)?$', defaultContexts, dotabuff);
 controller.hears('^!(jukebox|jb)( )?([^\\s\\\\]+)?$', defaultContexts, jukebox);
 controller.hears('^!wolfram (.*)$', defaultContexts, wolfram);
