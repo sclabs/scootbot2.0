@@ -260,6 +260,34 @@ function yaspstats(bot, message) {
     })});
 }
 
+function estimateMmr(steamID) {
+    var url = 'https://api.opendota.com/api/players/' + steamID;
+    return new Promise(function(resolve, reject) {
+        request({url: url, json: true}, function(error, response, body) {
+            if (error) return reject(error);
+            // return resolve(body.mmr_estimate.estimate);
+            return resolve(body.solo_competitive_rank);
+        })
+    })
+}
+
+function yasppowerrank(bot, message) {
+    var userNames = Object.getOwnPropertyNames(steamUserMapping);
+    var steamIds = userNames.map(function(userName) {return steamUserMapping[userName]});
+    Promise.all(steamIds.map(estimateMmr)).then(function(mmrs) {
+        var rankedUsers = [];
+        for (var i=0; i < userNames.length; i++) {
+            rankedUsers.push({name: userNames[i], mmr: mmrs[i]});
+        }
+        rankedUsers.sort(function(a, b) {return b.mmr - a.mmr});
+        var rankString = '';
+        for (var i=0; i < rankedUsers.length; i++) {
+            rankString += '(' + (i+1) + ') ' + rankedUsers[i].name + ' (' + rankedUsers[i].mmr + ')\n';
+        }
+        bot.reply(message, rankString);
+    });
+}
+
 function jukebox(bot, message) {
     if (message.match[3]) {
         request({
@@ -709,6 +737,7 @@ controller.hears('^!pickone (.*or.*)$', defaultContexts, pickone);
 controller.hears('^!dota$', defaultContexts, dota);
 controller.hears(['^!(.*)say$', '^!8(ball)'], defaultContexts, say);
 controller.hears('^!yaspstats ([^\\s\\\\]+) (.*)$', defaultContexts, yaspstats);
+controller.hears('^!yasp powerrank$', defaultContexts, yasppowerrank);
 controller.hears('^!(dotabuff|yasp|opendota)( )?([^\\s\\\\]+)?$', defaultContexts, dotabuff);
 controller.hears('^!(jukebox|jb)( )?([^\\s\\\\]+)?$', defaultContexts, jukebox);
 controller.hears('^!wolfram (.*)$', defaultContexts, wolfram);
