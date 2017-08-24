@@ -33,6 +33,17 @@ function getRandomIntInclusive(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Credit: https://stackoverflow.com/a/12646864
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    return array;
+}
+
 function hello(bot, message) {
     bot.api.users.info({user: message.user}, function(err, info){
         bot.reply(message, 'hello @' + info.user.name)
@@ -699,6 +710,34 @@ function sylvanas(bot, message) {
     bot.reply(message, 'https://www.youtube.com/watch?v=578a2SdwuSI');
 }
 
+function createTarotDeck() {
+    var majorArcana = ['The Fool', 'The Magician', 'The High Priestess',
+        'The Empress', 'The Emperor', 'The Hierophant', 'The Lovers',
+        'The Chariot', 'Strength', 'The Hermit', 'Wheel of Fortune',
+        'Justice', 'The Hanged Man', 'Death', 'Temperance', 'The Devil',
+        'The Tower', 'The Star', 'The Moon', 'The Sun', 'Judgement',
+        'The World'];
+    var suits = ['Wands', 'Pentacles', 'Cups', 'Swords'];
+    var numbers = ['Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven',
+        'Eight', 'Nine', 'Ten', 'Page', 'Knave', 'Queen', 'King'];
+    var minorArcana = [];
+    for (var i = 0; i < suits.length; i++) {
+        for (var j = 0; j < numbers.length; j++) {
+            if (Math.random() < 0.5) {
+                minorArcana.push('Inverse ' + numbers[j] + ' of ' + suits[i]);
+            }
+            else {
+                minorArcana.push(numbers[j] + ' of ' + suits[i]);
+            }
+        }
+    }
+    return shuffleArray(majorArcana.concat(minorArcana));
+}
+
+function tarot(bot, message) {
+    bot.reply(message, createTarotDeck().slice(0, 3).join(', '));
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -730,6 +769,7 @@ controller.hears('^!cloud status$', defaultContexts, cloudStatus);
 controller.hears('^!cloud register (.*)$', defaultContexts, cloudRegister);
 controller.hears('^!cloud deploy (.*) (.*)$', defaultContexts, cloudDeploy);
 controller.hears('^!sylvanas$', defaultContexts, sylvanas);
+controller.hears('^!tarot', defaultContexts, tarot);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
