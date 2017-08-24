@@ -769,7 +769,7 @@ controller.hears('^!cloud status$', defaultContexts, cloudStatus);
 controller.hears('^!cloud register (.*)$', defaultContexts, cloudRegister);
 controller.hears('^!cloud deploy (.*) (.*)$', defaultContexts, cloudDeploy);
 controller.hears('^!sylvanas$', defaultContexts, sylvanas);
-controller.hears('^!tarot', defaultContexts, tarot);
+controller.hears('^!tarot$', defaultContexts, tarot);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
