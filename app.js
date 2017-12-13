@@ -1,6 +1,7 @@
 var Botkit = require('botkit');
 var request = require("request");
 var exec = require('child_process').exec;
+var fs = require('fs');
 
 if (!process.env.SCOOTBOT_TOKEN) {
     console.log('Error: Specify token in environment');
@@ -26,6 +27,12 @@ var steamUserMapping = {
     'kwint': 47374215,
     'boomsy': 14046169
 };
+
+var dotaHeroList = JSON.parse(fs.readFileSync('heroes.json', 'utf8'));
+var dotaHeroMapping = {};
+for (var i = 0; i < dotaHeroList.length; i++) {
+    dotaHeroMapping[dotaHeroList[i].id] = dotaHeroList[i].localized_name;
+}
 
 function getRandomIntInclusive(min, max) {
     min = Math.ceil(min);
@@ -136,13 +143,12 @@ function dotabuff(bot, message) {
         var user = message.match[3];
         if (user in steamUserMapping) {
             request({
-                url: 'https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/V001/?key=' +
-                    process.env.STEAM_API_KEY + '&account_id=' + steamUserMapping[user],
+                url: 'https://api.opendota.com/api/players/' + steamUserMapping[user] + '/matches?limit=1',
                 json: true
             }, function (error, response, body) {
                 if (!error && response.statusCode === 200) {
-                    bot.reply(message, baseURL +
-                        body.result.matches[0].match_id);
+                    bot.reply(message, user + ' went ' + body[0].kills + '/' + body[0].deaths + '/' + body[0].assists +
+                        ' as ' + dotaHeroMapping[body[0].hero_id] + ' ' + baseURL + body[0].match_id);
                 }
                 else {
                     bot.reply(message, 'error encountered');
