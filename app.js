@@ -28,6 +28,15 @@ var steamUserMapping = {
     'boomsy': 14046169
 };
 
+var foosParameters = {
+    'tritz-elliott': 5.8,
+    'tritz-price': 6.0,
+    'elliott-tritz': 3.8,
+    'elliott-price': 5.7,
+    'price-tritz': 4.4,
+    'price-elliott': 5.0
+};
+
 var dotaHeroList = JSON.parse(fs.readFileSync('heroes.json', 'utf8'));
 var dotaHeroMapping = {};
 for (var i = 0; i < dotaHeroList.length; i++) {
@@ -38,6 +47,20 @@ function getRandomIntInclusive(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Credit: https://stackoverflow.com/a/16111276
+function getRandomIntPoisson(lambda) {
+    var L = Math.exp(-lambda),
+        k = 0,
+        p = 1;
+
+    do {
+        k = k + 1;
+        p = p * Math.random();
+    } while (p > L);
+
+    return k - 1;
 }
 
 // Credit: https://stackoverflow.com/a/12646864
@@ -744,6 +767,29 @@ function tarot(bot, message) {
     bot.reply(message, createTarotDeck().slice(0, 3).join(', '));
 }
 
+function foos(bot, message) {
+    var p1 = message.match[1];
+    var p2 = message.match[2];
+    var p1_score_key = p1 + '-' + p2;
+    var p2_score_key = p2 + '-' + p1;
+    if (p1_score_key in foosParameters && p2_score_key in foosParameters) {
+        var p1_score = getRandomIntPoisson(foosParameters[p1_score_key]);
+        var p2_score = getRandomIntPoisson(foosParameters[p2_score_key]);
+        if (p2_score > p1_score) {
+            bot.reply(message, p2 + ' beat ' + p1 + ' ' + p2_score + '-' + p1_score);
+        }
+        else if (p1_score > p2_score) {
+            bot.reply(message, p1 + ' beat ' + p2 + ' ' + p1_score + '-' + p2_score);
+        }
+        else {
+            bot.reply(message, p1 + ' and ' + p2 + ' drew ' + p1_score + '-' + p2_score);
+        }
+    }
+    else {
+        bot.reply(message, 'players not recognized');
+    }
+}
+
 var defaultContexts= ['ambient', 'direct_message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
@@ -776,6 +822,7 @@ controller.hears('^!cloud register (.*)$', defaultContexts, cloudRegister);
 controller.hears('^!cloud deploy (.*) (.*)$', defaultContexts, cloudDeploy);
 controller.hears('^!sylvanas$', defaultContexts, sylvanas);
 controller.hears('^!tarot$', defaultContexts, tarot);
+controller.hears('^!foos (.*) (.*)', defaultContexts, foos);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
