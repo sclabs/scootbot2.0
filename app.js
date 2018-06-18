@@ -692,7 +692,7 @@ function cloudDeploy(bot, message) {
                                 '-e VIRTUAL_HOST=' + subdomain + '.gilgi.org ' +
                                 '-e LETSENCRYPT_HOST=' + subdomain + '.gilgi.org ' +
                                 '-e LETSENCRYPT_EMAIL=admin@gilgi.org ' +
-                                '-n ' + subdomain + ' ' + dockerImage;
+                                '--name ' + subdomain + ' ' + dockerImage;
                             console.log(cmd);
                             exec(cmd, function(error, stdout, strerr) {
                                 bot.reply(message, 'deploy successful');
