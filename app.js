@@ -3,6 +3,11 @@ var request = require("request");
 var exec = require('child_process').exec;
 var fs = require('fs');
 
+
+// kill the bot every hour, expecting forever to restart it
+setTimeout(() => process.exit(), 1000 * 60 * 60);
+
+
 if (!process.env.SCOOTBOT_TOKEN) {
     console.log('Error: Specify token in environment');
     process.exit(1);
@@ -688,11 +693,21 @@ function cloudDeploy(bot, message) {
                         var cmd = 'docker pull ' + dockerImage;
                         console.log(cmd);
                         exec(cmd, function(error, stdout, strerr) {
+                            var environment = '';
+                            if (body.result.env) {
+                                for (var i=0; i < body.result.env.length; i++){
+                                    environment += '-e ' + body.result.env[i] + ' ';
+                                }
+                            }
+                            var volume = '';
+                            if (body.result.volume) {
+                                volume = '-v /home/scootbot/' + subdomain + ':' + body.result.volume;
+                            }
                             var cmd = 'docker run -d ' +
                                 '-e VIRTUAL_HOST=' + subdomain + '.gilgi.org ' +
                                 '-e LETSENCRYPT_HOST=' + subdomain + '.gilgi.org ' +
-                                '-e LETSENCRYPT_EMAIL=admin@gilgi.org ' +
-                                '--name ' + subdomain + ' ' + dockerImage;
+                                '-e LETSENCRYPT_EMAIL=admin@gilgi.org ' + environment + volume +
+                                ' --name ' + subdomain + ' ' + dockerImage;
                             console.log(cmd);
                             exec(cmd, function(error, stdout, strerr) {
                                 bot.reply(message, 'deploy successful');
