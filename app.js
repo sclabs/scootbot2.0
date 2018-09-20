@@ -33,6 +33,10 @@ var steamUserMapping = {
     'kwint': 47374215,
     'boomsy': 14046169
 };
+var steamUserReverseMapping = {};
+Object.keys(steamUserMapping).forEach(function(userName) {
+    steamUserReverseMapping[steamUserMapping[userName]] = userName;
+});
 
 var dotaHeroList = JSON.parse(fs.readFileSync('heroes.json', 'utf8'));
 var dotaHeroMapping = {};
@@ -193,7 +197,6 @@ function dotabuff(bot, message) {
     }
 }
 
-
 function resolveHeroNickname(nickname, callback) {
     // url we will need
     var heroNicknameTsvUrl = 'https://docs.google.com/spreadsheets/d/1z4rUK2tZkgqCWt-c5bShvm1ynZJDMrcC8W1gDW9rYcM/pub?gid=0&single=true&output=tsv';
@@ -224,7 +227,6 @@ function resolveHeroNickname(nickname, callback) {
     })
 }
 
-
 function resolveHeroNameToId(name, callback) {
     // short-circuit
     if (!name) {
@@ -252,6 +254,40 @@ function resolveHeroNameToId(name, callback) {
     })
 }
 
+function sortByKey(array, key) {
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        return ((x > y) ? -1 : ((x < y) ? 1 : 0));
+    });
+}
+
+function promiseRequest(url) {
+    return new Promise(function (resolve, reject) {
+        request(url, function (error, res, body) {
+            if (!error && res.statusCode === 200) {
+                resolve(body);
+            } else {
+                reject(error);
+            }
+        });
+    });
+}
+
+async function getStats(userId, heroId) {
+    var statsUrl = 'https://api.opendota.com/api/players/' + userId + '/wl?hero_id=' + heroId;
+    var stats = await promiseRequest({url: statsUrl, json: true});
+    var a = 3;
+    var b = 7;
+    return {
+        'userId': userId,
+        'heroId': heroId,
+        'win': stats.win,
+        'lose': stats.lose,
+        'totalGames': stats.win + stats.lose,
+        'percentage': Math.floor(100 * (stats.win / (stats.win + stats.lose))),
+        'powerRank': Math.floor(100 * ((stats.win + a) / ((stats.win + a) + (stats.lose + b))))
+    };
+}
 
 function yaspstats(bot, message) {
     // extract information from message
@@ -260,7 +296,9 @@ function yaspstats(bot, message) {
 
     resolveHeroNickname(heroString, function(heroname) {resolveHeroNameToId(heroname, function(heroId) {
         var userId = 0;
-        if (userString in steamUserMapping) {
+        if (userString === 'powerrank') {
+            userId = null;
+        } else if (userString in steamUserMapping) {
             userId = steamUserMapping[userString];
         }
         else {
@@ -270,12 +308,30 @@ function yaspstats(bot, message) {
 
         // hit the yasp API
         if (heroId) {
-            var statsUrl = 'https://api.opendota.com/api/players/' + userId + '/wl?hero_id=' + heroId;
-            request({url: statsUrl, json: true}, function (error, response, body) {
-                var totalGames = body.win + body.lose;
-                var percentage = Math.floor(100 * (body.win / totalGames));
-                bot.reply(message, body.win + '-' + body.lose + ' (' + percentage + '%)');
-            })
+            if (userId) {
+                getStats(userId, heroId).then(function (stats) {
+                    bot.reply(message, stats.win + '-' + stats.lose + ' (' + stats.percentage + '%)');
+                }).catch(function (err) {
+                    console.log(err);
+                });
+            } else {
+                var promiseList = [];
+                Object.keys(steamUserMapping).forEach(function(userName) {
+                    promiseList.push(getStats(steamUserMapping[userName], heroId));
+                });
+                Promise.all(promiseList).then(function(stats) {
+                    sortedStats = sortByKey(stats, 'powerRank');
+                    var messagePieces = [];
+                    for (var i = 0; i < sortedStats.length; i++) {
+                        messagePieces.push(
+                            (i+1).toString() + '. ' + steamUserReverseMapping[sortedStats[i].userId] + ' (' +
+                            sortedStats[i].win + '-' +  sortedStats[i].lose + ', ' + sortedStats[i].percentage + '%)')
+                    }
+                    bot.reply(message, messagePieces.join('\n'));
+                }).catch(function(err) {
+                    console.log(err);
+                })
+            }
         }
         else {
             bot.reply(message, 'failed to resolve hero name');
