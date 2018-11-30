@@ -320,7 +320,7 @@ function yaspstats(bot, message) {
                     promiseList.push(getStats(steamUserMapping[userName], heroId));
                 });
                 Promise.all(promiseList).then(function(stats) {
-                    sortedStats = sortByKey(stats, 'powerRank');
+                    sortedStats = sortByKey(stats, 'powerRank').filter(function (stat) {return stat.totalGames > 0;});
                     var messagePieces = [];
                     for (var i = 0; i < sortedStats.length; i++) {
                         messagePieces.push(
