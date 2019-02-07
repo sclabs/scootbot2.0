@@ -38,6 +38,21 @@ Object.keys(steamUserMapping).forEach(function(userName) {
     steamUserReverseMapping[steamUserMapping[userName]] = userName;
 });
 
+var steamMapping = {
+    'gilgi': '76561197990811534',
+    'vindi': '76561197998050465'
+};
+
+var chessLevels = [];
+var chessRanks = ['Pawn', 'Knight', 'Bishop', 'Rook'];
+for (var i = 0; i < chessRanks.length; i++) {
+    for (var j = 0; j < 9; j++) {
+        chessLevels.push(chessRanks[i] + ' ' + (j+1));
+    }
+}
+chessLevels.push('King');
+chessLevels.push('Queen');
+
 var dotaHeroList = JSON.parse(fs.readFileSync('heroes.json', 'utf8'));
 var dotaHeroMapping = {};
 for (var i = 0; i < dotaHeroList.length; i++) {
@@ -338,6 +353,47 @@ function yaspstats(bot, message) {
         }
     })});
 }
+
+
+async function chessStats() {
+    userNames = [];
+    userIds = [];
+    scores = [];
+    for (userName in steamMapping) {
+        if (steamMapping.hasOwnProperty(userName)){
+            userNames.push(userName);
+            userIds.push(steamMapping[userName]);
+        }
+    }
+    var statsUrl = 'http://101.200.189.65:431/dac/ranking/get?player_ids=' + userIds.join(',');
+    var stats = await promiseRequest({url: statsUrl, json: true});
+    data = [];
+    for (var i = 0; i < userNames.length; i++) {
+        data.push({
+            name: userNames[i],
+            score: parseInt(stats.ranking_info[i].score),
+            rank: parseInt(stats.ranking_info[i].mmr_level)
+        });
+    }
+    return data
+}
+
+
+function chess(bot, message) {
+    chessStats().then(function(data) {
+        sortedStats = sortByKey(data, 'score')
+        var messagePieces = [];
+            for (var i = 0; i < sortedStats.length; i++) {
+                messagePieces.push(
+                    (i+1).toString() + '. ' +
+                    sortedStats[i].name + ' (' +
+                    chessLevels[sortedStats[i].rank-1] + ', ' +
+                    sortedStats[i].score + ' MMR)')
+            }
+            bot.reply(message, messagePieces.join('\n'));
+    });
+}
+
 
 function jukebox(bot, message) {
     if (message.match[3]) {
@@ -807,6 +863,7 @@ controller.hears('^!cloud register (.*)$', defaultContexts, cloudRegister);
 controller.hears('^!cloud deploy (.*) (.*)$', defaultContexts, cloudDeploy);
 controller.hears('^!sylvanas$', defaultContexts, sylvanas);
 controller.hears('^!tarot$', defaultContexts, tarot);
+controller.hears('^!chess$', defaultContexts, chess);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
