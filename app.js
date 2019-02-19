@@ -365,14 +365,18 @@ async function chessStats() {
             userIds.push(steamMapping[userName]);
         }
     }
-    var statsUrl = 'http://101.200.189.65:431/dac/ranking/get?player_ids=' + userIds.join(',');
-    var stats = await promiseRequest({url: statsUrl, json: true});
-    data = [];
+    var promiseList = []
     for (var i = 0; i < userNames.length; i++) {
+        var statsUrl = 'http://www.autochess-stats.com/backend/api/dacprofiles/' + userIds[i];
+        promiseList.push(promiseRequest({url: statsUrl, json: true}));
+    }
+    data = [];
+    stats = await Promise.all(promiseList);
+    for (var i = 0; i < stats.length; i++) {
         data.push({
             name: userNames[i],
-            score: parseInt(stats.ranking_info[i].score),
-            rank: parseInt(stats.ranking_info[i].mmr_level)
+            score: parseInt(stats[i].dacProfile.score),
+            rank: parseInt(stats[i].dacProfile.rank)
         });
     }
     return data
