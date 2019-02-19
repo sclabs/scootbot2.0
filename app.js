@@ -40,7 +40,8 @@ Object.keys(steamUserMapping).forEach(function(userName) {
 
 var steamMapping = {
     'gilgi': '76561197990811534',
-    'vindi': '76561197998050465'
+    'vindi': '76561197998050465',
+    'kwint': '76561198007639943'
 };
 
 var chessLevels = [];
