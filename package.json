@@ -5,7 +5,8 @@
   "main": "app.js",
   "dependencies": {
     "botkit": "^0.2.2",
-    "githubhook": "^1.7.1"
+    "githubhook": "^1.7.1",
+    "pitchfork": "0.0.16"
   },
   "devDependencies": {},
   "scripts": {
