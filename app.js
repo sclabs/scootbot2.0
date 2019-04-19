@@ -3,6 +3,7 @@ var request = require("request");
 var exec = require('child_process').exec;
 var fs = require('fs');
 var deploy = require('./docker.js').deploy;
+var p4k = require('pitchfork');
 
 
 // kill the bot every hour, expecting forever to restart it
@@ -133,7 +134,8 @@ function say(bot, message) {
     };
     var twitterMapping = {
         'swift': 'swiftonsecurity',
-        'wolf': 'wolfpupy'
+        'wolf': 'wolfpupy',
+        'wint': 'dril'
     };
     var name = message.match[1];
     var userID = '';
@@ -513,8 +515,45 @@ function aotdSubmit(bot, message) {
     }
 }
 
+function pitchfork(bot, message) {
+    request({
+        url: 'https://script.google.com/macros/s/AKfycbxZe3OukuZO20ahND9o4mgauaKA7dfFAgjPMFiObc6aYFISO-JQ/' +
+            'exec?latest=1',
+        json: true
+    }, function (error, response, body) {
+        if (!error && response.statusCode === 200) {
+            var s = new p4k.Search(body.text.substring(24).split(' (selected by ')[0].split(' by ').join(' '));
+            s.on('ready', function(results) {
+                bot.reply(message, results[0].attributes.album + ' by ' + results[0].attributes.artist + ': ' + results[0].attributes.score);
+            });
+        }
+        else {
+            bot.reply(message, 'error encountered');
+        }
+    });
+}
+
 function scp(bot, message) {
-    bot.reply(message, 'http://www.scp-wiki.net/scp-' + ("000" + getRandomIntInclusive(1, 2257)).slice(-4));
+    var n = getRandomIntInclusive(1, 4999)
+    console.log(n);
+    var s = n.toString();
+    console.log(s);
+    if (s.length < 3) {
+        s = ('00' + s).slice(-3);
+    }
+    console.log(s);
+    console.log('http://www.scp-wiki.net/scp-' + s);
+    if (n > 4126) {
+        console.log('checking');
+        request('http://www.scp-wiki.net/scp-' + s, function (error, response, body) {
+            if (!error || response.statusCode == 404) {
+                console.log('failed, trying again');
+                scp(bot, message);
+                return;
+            }
+        });
+    }
+    bot.reply(message, 'new bot says: http://www.scp-wiki.net/scp-' + s);
 }
 
 function draft(bot, message) {
@@ -850,6 +889,7 @@ controller.hears('^!(dotabuff|yasp|opendota)( )?([^\\s\\\\]+)?$', defaultContext
 controller.hears('^!(jukebox|jb)( )?([^\\s\\\\]+)?$', defaultContexts, jukebox);
 controller.hears('^!wolfram (.*)$', defaultContexts, wolfram);
 controller.hears('^.*aotd is (.*) by (.*) <(http.*)>.*$', defaultContexts, aotdSubmit);
+controller.hears('^.*album of the day is (.*) by (.*) <(http.*)>.*$', defaultContexts, aotdSubmit);
 controller.hears('^!aotd$', defaultContexts, aotd);
 controller.hears('^!aotd throwback$', defaultContexts, aotdThrowback);
 controller.hears('^!aotd spreadsheet$', defaultContexts, aotdSpreadsheet);
@@ -869,6 +909,7 @@ controller.hears('^!cloud deploy (.*) (.*)$', defaultContexts, cloudDeploy);
 controller.hears('^!sylvanas$', defaultContexts, sylvanas);
 controller.hears('^!tarot$', defaultContexts, tarot);
 controller.hears('^!chess$', defaultContexts, chess);
+controller.hears('^!p4k$', defaultContexts, pitchfork);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
