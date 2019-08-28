@@ -32,7 +32,8 @@ var steamUserMapping = {
     'sehi': 59311372,
     'vindi': 37784737,
     'kwint': 47374215,
-    'boomsy': 14046169
+    'boomsy': 14046169,
+    'janus': 59053168
 };
 var steamUserReverseMapping = {};
 Object.keys(steamUserMapping).forEach(function(userName) {
@@ -129,6 +130,7 @@ function say(bot, message) {
         'lam': '1vMZlG-8QoeO4y-O5YY7leULJ7vUfRMdR35hHA0hv2rY',
         'zusko': '1F_t5dU33qTKPRo2aJlvnU6VN3-WybgXz-l9ah4RfOXE',
         'boomsy': '17P2RqkHeC9CV2lq_gz9nY1sqXDxKdErUzFYaOSovvA8',
+        'janus': '1FOuCjnKH83dv37lyQXJ4eOOClat0Zr39mWLj7HTMU2M',
         'space': '10lgnBeHKE3YTeokA5MoM6Qqs73PN8hvL1-yKJVxMM8I',
         'ball': '1SZ5XCkoYRhkI-i1M141UkUxvDpIN_5N4thjnBCWB3NI'
     };
