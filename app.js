@@ -57,9 +57,13 @@ chessLevels.push('King');
 chessLevels.push('Queen');
 
 var dotaHeroList = JSON.parse(fs.readFileSync('heroes.json', 'utf8'));
-var dotaHeroMapping = {};
+var dotaHeroIdToName = {};
 for (var i = 0; i < dotaHeroList.length; i++) {
-    dotaHeroMapping[dotaHeroList[i].id] = dotaHeroList[i].localized_name;
+    dotaHeroIdToName[dotaHeroList[i].id] = dotaHeroList[i].localized_name;
+}
+var dotaHeroNameToId = {};
+for (var i = 0; i < dotaHeroList.length; i++) {
+    dotaHeroNameToId[dotaHeroList[i].localized_name] = dotaHeroList[i].id;
 }
 
 function getRandomIntInclusive(min, max) {
@@ -178,7 +182,7 @@ function dotabuff(bot, message) {
             }, function (error, response, body) {
                 if (!error && response.statusCode === 200) {
                     bot.reply(message, user + ' went ' + body[0].kills + '/' + body[0].deaths + '/' + body[0].assists +
-                        ' as ' + dotaHeroMapping[body[0].hero_id] + ' ' + baseURL + body[0].match_id);
+                        ' as ' + dotaHeroIdToName[body[0].hero_id] + ' ' + baseURL + body[0].match_id);
                 }
                 else {
                     bot.reply(message, 'error encountered');
@@ -231,10 +235,10 @@ function resolveHeroNickname(nickname, callback) {
             if (pieces.length > 1) {
                 var nicknames = pieces[1].split(',');
                 for (var j = 0; j < nicknames.length; j++) {
-                    nicknameMap[nicknames[j].toLowerCase().trim()] = pieces[0].toLowerCase().trim();
+                    nicknameMap[nicknames[j].toLowerCase().trim()] = pieces[0].trim();
                 }
             }
-            nicknameMap[pieces[0].toLowerCase().trim()] = pieces[0].toLowerCase().trim();
+            nicknameMap[pieces[0].toLowerCase().trim()] = pieces[0].trim();
         }
 
         // lookup
@@ -253,25 +257,12 @@ function resolveHeroNameToId(name, callback) {
         return callback(null);
     }
 
-    // url we will need
-    var heroIdJsonUrl ='https://api.opendota.com/api/heroes';
-
-    request({url: heroIdJsonUrl, json: true}, function (error, response, body) {
-        // construct idMap
-        var idMap = {};
-        for (var i = 0; i < body.length; i++) {
-            var hero = body[i];
-            idMap[hero.localized_name.toLowerCase()] = hero.id;
-        }
-
-        // lookup
-        if (name in idMap) {
-            return callback(idMap[name]);
-        }
-        else {
-            return callback(null);
-        }
-    })
+    if (name in dotaHeroNameToId) {
+        return callback(dotaHeroNameToId[name]);
+    }
+    else {
+        return callback(null);
+    }
 }
 
 function sortByKey(array, key) {
@@ -325,6 +316,8 @@ function yaspstats(bot, message) {
             bot.reply(message, 'failed to resolve user name');
             return;
         }
+
+        console.log(heroId);
 
         // hit the yasp API
         if (heroId) {
