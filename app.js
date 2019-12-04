@@ -46,6 +46,17 @@ var steamMapping = {
     'kwint': '76561198007639943'
 };
 
+var dotaTierToName = {
+    '1': 'Herald',
+    '2': 'Guardian',
+    '3': 'Crusader',
+    '4': 'Archon',
+    '5': 'Legend',
+    '6': 'Ancient',
+    '7': 'Divine',
+    '8': 'Immortal'
+}
+
 var chessLevels = [];
 var chessRanks = ['Pawn', 'Knight', 'Bishop', 'Rook'];
 for (var i = 0; i < chessRanks.length; i++) {
@@ -289,6 +300,24 @@ function promiseRequest(url) {
     });
 }
 
+async function getRank(userId) {
+    var profileUrl = 'https://api.opendota.com/api/players/' + userId;
+    var profile = await promiseRequest({url: profileUrl, json: true});
+    console.log(profile.rank_tier);
+    var tier = profile.rank_tier;
+    if (tier == null) {
+        name = null;
+    }
+    else {
+        var tierString = tier.toString();
+        var name = dotaTierToName[tierString[0]];
+        if (name != 'Immortal') {
+            name += ' ' + tierString[1];
+        }
+    }
+    return {name, tier, userId};
+}
+
 async function getStats(userId, heroId) {
     var statsUrl = 'https://api.opendota.com/api/players/' + userId + '/wl?hero_id=' + heroId;
     var stats = await promiseRequest({url: statsUrl, json: true});
@@ -308,22 +337,51 @@ async function getStats(userId, heroId) {
 function yaspstats(bot, message) {
     // extract information from message
     var userString = message.match[1];
-    var heroString = message.match[2];
+    var heroString = message.match[3];
 
+    // resolve userId, set it to null for powerrank mode
+    var userId = 0;
+    if (userString === 'powerrank') {
+        userId = null;
+    } else if (userString in steamUserMapping) {
+        userId = steamUserMapping[userString];
+    }
+    else {
+        bot.reply(message, 'failed to resolve user name');
+        return;
+    }
+
+    // no heroString, we will return ranks not winrates
+    if (heroString == undefined) {
+        if (userId) {
+            getRank(userId).then(function (rank) {
+                bot.reply(message, rank.name);
+            }).catch(function (err) {
+                console.log(err);
+            });
+        } else {
+            var promiseList = [];
+            Object.keys(steamUserMapping).forEach(function(userName) {
+                promiseList.push(getRank(steamUserMapping[userName]));
+            });
+            Promise.all(promiseList).then(function(ranks) {
+                sortedRanks = sortByKey(ranks, 'tier').filter(function (rank) {return rank.tier != null;});
+                var messagePieces = [];
+                for (var i = 0; i < sortedRanks.length; i++) {
+                    messagePieces.push(
+                        (i+1).toString() + '. ' + steamUserReverseMapping[sortedRanks[i].userId] + ' (' +
+                        sortedRanks[i].name + ')')
+                }
+                bot.reply(message, messagePieces.join('\n'));
+            }).catch(function(err) {
+                console.log(err);
+            })
+        }
+        return;
+    }
+
+    // there is a heroString, we will need to resolve it to a heroId
     resolveHeroNickname(heroString, function(heroname) {resolveHeroNameToId(heroname, function(heroId) {
-        var userId = 0;
-        if (userString === 'powerrank') {
-            userId = null;
-        } else if (userString in steamUserMapping) {
-            userId = steamUserMapping[userString];
-        }
-        else {
-            bot.reply(message, 'failed to resolve user name');
-            return;
-        }
-
-        console.log(heroId);
-
         // hit the yasp API
         if (heroId) {
             if (userId) {
@@ -884,7 +942,7 @@ controller.hears('^!rtd( )?([0-9]+)?$', defaultContexts, rtd);
 controller.hears('^!pickone (.*or.*)$', defaultContexts, pickone);
 controller.hears('^!dota$', defaultContexts, dota);
 controller.hears(['^!(.*)say$', '^!8(ball)'], defaultContexts, say);
-controller.hears('^!yaspstats ([^\\s\\\\]+) (.*)$', defaultContexts, yaspstats);
+controller.hears('^!yaspstats ([^\\s\\\\]+)( )?(.*)?$', defaultContexts, yaspstats);
 controller.hears('^!(dotabuff|yasp|opendota)( )?([^\\s\\\\]+)?$', defaultContexts, dotabuff);
 controller.hears('^!(jukebox|jb)( )?([^\\s\\\\]+)?$', defaultContexts, jukebox);
 controller.hears('^!wolfram (.*)$', defaultContexts, wolfram);
