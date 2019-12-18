@@ -194,11 +194,14 @@ function dotabuff(bot, message) {
                 wonOrLost = body[0].player_slot >>> 7 ^ body[0].radiant_win ? 'won' : 'lost';
                 pogOrKekw = wonOrLost == 'won' ? ':pogchamp:' : ':kekw:';
                 if (!error && response.statusCode === 200) {
-                    bot.reply(message, user + ' ' + wonOrLost + ' as ' +
-                              dotaHeroIdToName[body[0].hero_id] + ' going ' +
-                              body[0].kills + '/' + body[0].deaths + '/' + body[0].assists +
-                              ' ' + pogOrKekw +
-                              ' ' + baseURL + body[0].match_id);
+                    linkText = '<' + baseURL + body[0].match_id + '|' +
+                        baseURL.slice(8) + body[0].match_id + '>';
+                    responseText = user + ' ' + wonOrLost + ' as ' +
+                        dotaHeroIdToName[body[0].hero_id] + ' going ' +
+                        body[0].kills + '/' + body[0].deaths + '/' + body[0].assists +
+                        ' ' + pogOrKekw +
+                        ' ' + linkText;
+                    bot.reply(message, {'text': responseText, 'unfurl_links': false, 'unfurl_media': false});
                 }
                 else {
                     bot.reply(message, 'error encountered');
