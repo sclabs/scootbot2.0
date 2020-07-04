@@ -26,6 +26,7 @@ module.exports.deploy = function(username, subdomain, dockerImage, callback) {
                             volume = '-v /home/scootbot/' + subdomain + ':' + body.result.volume;
                         }
                         var cmd = 'docker run -d ' +
+                            '--log-opt max-size=10m ' +
                             '-e VIRTUAL_HOST=' + subdomain + '.gilgi.org ' +
                             '-e LETSENCRYPT_HOST=' + subdomain + '.gilgi.org ' +
                             '-e LETSENCRYPT_EMAIL=admin@gilgi.org ' + environment + volume +
