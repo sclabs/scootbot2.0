@@ -2,7 +2,7 @@ var Botkit = require('botkit');
 var request = require("request");
 var exec = require('child_process').exec;
 var fs = require('fs');
-var deploy = require('./docker.js').deploy;
+var docker = require('./docker.js');
 var p4k = require('pitchfork');
 
 
@@ -899,8 +899,23 @@ function cloudDeploy(bot, message) {
     var subdomain = message.match[1];
     var dockerImage = message.match[2];
     bot.api.users.info({user: message.user}, function(err, info){
-        deploy(info.user.name, subdomain, dockerImage, function(msg) { bot.reply(message, msg) });
+        docker.deploy(info.user.name, subdomain, dockerImage, function(msg) { bot.reply(message, msg) });
     });
+}
+
+function cloudRestart(bot, message) {
+    bot.api.users.info({user: message.user}, function(err, info){
+        if (info.user.name == 'gilgi') {
+            docker.restart(function(msg) { bot.reply(message, msg) });
+        }
+        else {
+            bot.reply(message, 'user not authorized');
+        }
+    });
+}
+
+function cloudRenew(bot, message) {
+    docker.renew(function(msg) { bot.reply(message, msg) });
 }
 
 function sylvanas(bot, message) {
@@ -965,6 +980,8 @@ controller.hears('^!eve (.*)$', defaultContexts, eve);
 controller.hears('^!cathy$', defaultContexts, cathy);
 controller.hears('^!cloud help$', defaultContexts, cloudHelp);
 controller.hears('^!cloud status$', defaultContexts, cloudStatus);
+controller.hears('^!cloud restart$', defaultContexts, cloudRestart);
+controller.hears('^!cloud renew$', defaultContexts, cloudRenew);
 controller.hears('^!cloud register (.*)$', defaultContexts, cloudRegister);
 controller.hears('^!cloud deploy (.*) (.*)$', defaultContexts, cloudDeploy);
 controller.hears('^!sylvanas$', defaultContexts, sylvanas);
@@ -974,5 +991,3 @@ controller.hears('^!p4k$', defaultContexts, pitchfork);
 controller.hears('^!debug$', 'direct_message', debugState);
 controller.hears('^\\$(.*)\\$$', defaultContexts, latex);
 controller.hears('(.*)', ['ambient'], updateStates);
-
-module.exports.deploy = deploy;

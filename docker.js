@@ -47,3 +47,17 @@ module.exports.deploy = function(username, subdomain, dockerImage, callback) {
         }
     });
 };
+
+
+module.exports.restart = function(callback) {
+    exec('bash cloudrestart.sh', function(error, stdout, stderr) {
+        callback('restart successful');
+    })
+};
+
+
+module.exports.renew = function(callback) {
+    exec('docker exec nginx-letsencrypt /app/force_renew', function(error, stdout, stderr) {
+        callback('renewal successful');
+    })
+};
