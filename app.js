@@ -1,4 +1,5 @@
-var Botkit = require('botkit');
+const { SlackAdapter } = require('botbuilder-adapter-slack');
+let { Botkit } = require('botkit');
 var request = require("request");
 var exec = require('child_process').exec;
 var fs = require('fs');
@@ -11,18 +12,24 @@ setTimeout(() => process.exit(), 1000 * 60 * 60);
 
 
 if (!process.env.SCOOTBOT_TOKEN) {
-    console.log('Error: Specify token in environment');
+    console.log('Error: Specify SCOOTBOT_TOKEN in environment');
     process.exit(1);
 }
 
-var controller = Botkit.slackbot({
-    debug: false
+if (!process.env.SCOOTBOT_SIGNING_SECRET) {
+    console.log('Error: Specify SCOOTBOT_SIGNING_SECRET in environment');
+    process.exit(1);
+}
+
+const adapter = new SlackAdapter({
+    clientSigningSecret: process.env.SCOOTBOT_SIGNING_SECRET,
+    botToken: process.env.SCOOTBOT_TOKEN
 });
 
-// connect the bot to a stream of messages
-var bot = controller.spawn({
-    token: process.env.SCOOTBOT_TOKEN
-}).startRTM();
+const controller = new Botkit({
+    adapter,
+    debug: false
+});
 
 var steamUserMapping = {
     'gilgi': 30545806,
@@ -36,7 +43,7 @@ var steamUserMapping = {
     'janus': 59053168
 };
 var steamUserReverseMapping = {};
-Object.keys(steamUserMapping).forEach(function(userName) {
+Object.keys(steamUserMapping).forEach(function (userName) {
     steamUserReverseMapping[steamUserMapping[userName]] = userName;
 });
 
@@ -61,7 +68,7 @@ var chessLevels = [];
 var chessRanks = ['Pawn', 'Knight', 'Bishop', 'Rook'];
 for (var i = 0; i < chessRanks.length; i++) {
     for (var j = 0; j < 9; j++) {
-        chessLevels.push(chessRanks[i] + ' ' + (j+1));
+        chessLevels.push(chessRanks[i] + ' ' + (j + 1));
     }
 }
 chessLevels.push('King');
@@ -94,24 +101,33 @@ function shuffleArray(array) {
     return array;
 }
 
-function hello(bot, message) {
-    bot.api.users.info({user: message.user}, function(err, info){
-        bot.reply(message, 'hello @' + info.user.name)
+async function hello(bot, message) {
+    console.log("got hello");
+    await bot.changeContext(message.reference);
+    await bot.api.users.info({ user: message.user }, async function (err, info) {
+        console.log('info returned');
+        console.log(err);
+        console.log(info);
+        await bot.reply(message, 'hello @' + info.user.name);
     })
 }
 
-function echo(bot, message) {
-    if (message.match[2]) {
-        bot.reply(message, message.match[2])
+async function echo(bot, message) {
+    await bot.changeContext(message.reference);
+    console.log(message);
+    console.log(message.matches);
+    if (message.matches[2]) {
+        await bot.reply(message, message.matches[2])
     }
 }
 
-function flipcoin(bot, message) {
+async function flipcoin(bot, message) {
+    await bot.changeContext(message.reference);
     if (Math.random() < 0.5) {
-        bot.reply(message, 'heads');
+        await bot.reply(message, 'heads');
     }
     else {
-        bot.reply(message, 'tails');
+        await bot.reply(message, 'tails');
     }
 }
 
@@ -201,7 +217,7 @@ function dotabuff(bot, message) {
                         body[0].kills + '/' + body[0].deaths + '/' + body[0].assists +
                         ' ' + pogOrKekw +
                         ' ' + linkText;
-                    bot.reply(message, {'text': responseText, 'unfurl_links': false, 'unfurl_media': false});
+                    bot.reply(message, { 'text': responseText, 'unfurl_links': false, 'unfurl_media': false });
                 }
                 else {
                     bot.reply(message, 'error encountered');
@@ -223,7 +239,7 @@ function dotabuff(bot, message) {
                     json: true
                 }, function (error, response, body) {
                     if (!error && response.statusCode === 200) {
-                        for (var i = 0; i < body.result.matches.length; i++){
+                        for (var i = 0; i < body.result.matches.length; i++) {
                             matchIDs.push(body.result.matches[i].match_id);
                         }
                         if (--pendingRequests == 0) {
@@ -244,7 +260,7 @@ function resolveHeroNickname(nickname, callback) {
     // url we will need
     var heroNicknameTsvUrl = 'https://docs.google.com/spreadsheets/d/1z4rUK2tZkgqCWt-c5bShvm1ynZJDMrcC8W1gDW9rYcM/pub?gid=0&single=true&output=tsv';
 
-    request({url: heroNicknameTsvUrl}, function (error, response, body) {
+    request({ url: heroNicknameTsvUrl }, function (error, response, body) {
         // construct nicknameMap
         var nicknameMap = {};
         var lines = body.split('\n');
@@ -285,7 +301,7 @@ function resolveHeroNameToId(name, callback) {
 }
 
 function sortByKey(array, key) {
-    return array.sort(function(a, b) {
+    return array.sort(function (a, b) {
         var x = a[key]; var y = b[key];
         return ((x > y) ? -1 : ((x < y) ? 1 : 0));
     });
@@ -305,7 +321,7 @@ function promiseRequest(url) {
 
 async function getRank(userId) {
     var profileUrl = 'https://api.opendota.com/api/players/' + userId;
-    var profile = await promiseRequest({url: profileUrl, json: true});
+    var profile = await promiseRequest({ url: profileUrl, json: true });
     console.log(profile.rank_tier);
     var tier = profile.rank_tier;
     if (tier == null) {
@@ -318,12 +334,12 @@ async function getRank(userId) {
             name += ' ' + tierString[1];
         }
     }
-    return {name, tier, userId};
+    return { name, tier, userId };
 }
 
 async function getStats(userId, heroId) {
     var statsUrl = 'https://api.opendota.com/api/players/' + userId + '/wl?hero_id=' + heroId;
-    var stats = await promiseRequest({url: statsUrl, json: true});
+    var stats = await promiseRequest({ url: statsUrl, json: true });
     var a = 3;
     var b = 7;
     return {
@@ -364,19 +380,19 @@ function yaspstats(bot, message) {
             });
         } else {
             var promiseList = [];
-            Object.keys(steamUserMapping).forEach(function(userName) {
+            Object.keys(steamUserMapping).forEach(function (userName) {
                 promiseList.push(getRank(steamUserMapping[userName]));
             });
-            Promise.all(promiseList).then(function(ranks) {
-                sortedRanks = sortByKey(ranks, 'tier').filter(function (rank) {return rank.tier != null;});
+            Promise.all(promiseList).then(function (ranks) {
+                sortedRanks = sortByKey(ranks, 'tier').filter(function (rank) { return rank.tier != null; });
                 var messagePieces = [];
                 for (var i = 0; i < sortedRanks.length; i++) {
                     messagePieces.push(
-                        (i+1).toString() + '. ' + steamUserReverseMapping[sortedRanks[i].userId] + ' (' +
+                        (i + 1).toString() + '. ' + steamUserReverseMapping[sortedRanks[i].userId] + ' (' +
                         sortedRanks[i].name + ')')
                 }
                 bot.reply(message, messagePieces.join('\n'));
-            }).catch(function(err) {
+            }).catch(function (err) {
                 console.log(err);
             })
         }
@@ -384,38 +400,40 @@ function yaspstats(bot, message) {
     }
 
     // there is a heroString, we will need to resolve it to a heroId
-    resolveHeroNickname(heroString, function(heroname) {resolveHeroNameToId(heroname, function(heroId) {
-        // hit the yasp API
-        if (heroId) {
-            if (userId) {
-                getStats(userId, heroId).then(function (stats) {
-                    bot.reply(message, stats.win + '-' + stats.lose + ' (' + stats.percentage + '%)');
-                }).catch(function (err) {
-                    console.log(err);
-                });
-            } else {
-                var promiseList = [];
-                Object.keys(steamUserMapping).forEach(function(userName) {
-                    promiseList.push(getStats(steamUserMapping[userName], heroId));
-                });
-                Promise.all(promiseList).then(function(stats) {
-                    sortedStats = sortByKey(stats, 'powerRank').filter(function (stat) {return stat.totalGames > 0;});
-                    var messagePieces = [];
-                    for (var i = 0; i < sortedStats.length; i++) {
-                        messagePieces.push(
-                            (i+1).toString() + '. ' + steamUserReverseMapping[sortedStats[i].userId] + ' (' +
-                            sortedStats[i].win + '-' +  sortedStats[i].lose + ', ' + sortedStats[i].percentage + '%)')
-                    }
-                    bot.reply(message, messagePieces.join('\n'));
-                }).catch(function(err) {
-                    console.log(err);
-                })
+    resolveHeroNickname(heroString, function (heroname) {
+        resolveHeroNameToId(heroname, function (heroId) {
+            // hit the yasp API
+            if (heroId) {
+                if (userId) {
+                    getStats(userId, heroId).then(function (stats) {
+                        bot.reply(message, stats.win + '-' + stats.lose + ' (' + stats.percentage + '%)');
+                    }).catch(function (err) {
+                        console.log(err);
+                    });
+                } else {
+                    var promiseList = [];
+                    Object.keys(steamUserMapping).forEach(function (userName) {
+                        promiseList.push(getStats(steamUserMapping[userName], heroId));
+                    });
+                    Promise.all(promiseList).then(function (stats) {
+                        sortedStats = sortByKey(stats, 'powerRank').filter(function (stat) { return stat.totalGames > 0; });
+                        var messagePieces = [];
+                        for (var i = 0; i < sortedStats.length; i++) {
+                            messagePieces.push(
+                                (i + 1).toString() + '. ' + steamUserReverseMapping[sortedStats[i].userId] + ' (' +
+                                sortedStats[i].win + '-' + sortedStats[i].lose + ', ' + sortedStats[i].percentage + '%)')
+                        }
+                        bot.reply(message, messagePieces.join('\n'));
+                    }).catch(function (err) {
+                        console.log(err);
+                    })
+                }
             }
-        }
-        else {
-            bot.reply(message, 'failed to resolve hero name');
-        }
-    })});
+            else {
+                bot.reply(message, 'failed to resolve hero name');
+            }
+        })
+    });
 }
 
 
@@ -424,7 +442,7 @@ async function chessStats() {
     userIds = [];
     scores = [];
     for (userName in steamMapping) {
-        if (steamMapping.hasOwnProperty(userName)){
+        if (steamMapping.hasOwnProperty(userName)) {
             userNames.push(userName);
             userIds.push(steamMapping[userName]);
         }
@@ -432,7 +450,7 @@ async function chessStats() {
     var promiseList = []
     for (var i = 0; i < userNames.length; i++) {
         var statsUrl = 'http://www.autochess-stats.com/backend/api/dacprofiles/' + userIds[i];
-        promiseList.push(promiseRequest({url: statsUrl, json: true}));
+        promiseList.push(promiseRequest({ url: statsUrl, json: true }));
     }
     data = [];
     stats = await Promise.all(promiseList);
@@ -448,17 +466,17 @@ async function chessStats() {
 
 
 function chess(bot, message) {
-    chessStats().then(function(data) {
+    chessStats().then(function (data) {
         sortedStats = sortByKey(data, 'score')
         var messagePieces = [];
-            for (var i = 0; i < sortedStats.length; i++) {
-                messagePieces.push(
-                    (i+1).toString() + '. ' +
-                    sortedStats[i].name + ' (' +
-                    chessLevels[sortedStats[i].rank-1] + ', ' +
-                    sortedStats[i].score + ' MMR)')
-            }
-            bot.reply(message, messagePieces.join('\n'));
+        for (var i = 0; i < sortedStats.length; i++) {
+            messagePieces.push(
+                (i + 1).toString() + '. ' +
+                sortedStats[i].name + ' (' +
+                chessLevels[sortedStats[i].rank - 1] + ', ' +
+                sortedStats[i].score + ' MMR)')
+        }
+        bot.reply(message, messagePieces.join('\n'));
     });
 }
 
@@ -558,11 +576,11 @@ function aotdSubmit(bot, message) {
         'boomsy': 'boomsy'
     };
     if (message.match[1] && message.match[2] && message.match[3]) {
-        bot.api.users.info({user: message.user}, function (err, info) {
+        bot.api.users.info({ user: message.user }, function (err, info) {
             request({
                 url: 'https://script.google.com/macros/s/AKfycbxZe3OukuZO20ahND9o4mgauaKA7dfFAgjPMFiObc6aYFISO-JQ/' +
-                'exec?submit=1&user=' + userMapping[info.user.name] + '&album=' + message.match[1] + '&artist=' +
-                message.match[2] + '&link=' + message.match[3],
+                    'exec?submit=1&user=' + userMapping[info.user.name] + '&album=' + message.match[1] + '&artist=' +
+                    message.match[2] + '&link=' + message.match[3],
                 json: true
             }, function (error, response, body) {
                 if (!error && response.statusCode === 200) {
@@ -584,7 +602,7 @@ function pitchfork(bot, message) {
     }, function (error, response, body) {
         if (!error && response.statusCode === 200) {
             var s = new p4k.Search(body.text.substring(24).split(' (selected by ')[0].split(' by ').join(' '));
-            s.on('ready', function(results) {
+            s.on('ready', function (results) {
                 bot.reply(message, results[0].attributes.album + ' by ' + results[0].attributes.artist + ': ' + results[0].attributes.score);
             });
         }
@@ -663,7 +681,7 @@ function osu(bot, message) {
                 '\nScore: ' + body[0].score.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") +
                 '\nRank: ' + body[0].rank +
                 '\nMax Combo: ' + body[0].maxcombo + 'x' + perfectString +
-                '\n300/100/50: ' + body[0].count300 + ' / ' +  body[0].count100 + ' / ' + body[0].count50 +
+                '\n300/100/50: ' + body[0].count300 + ' / ' + body[0].count100 + ' / ' + body[0].count50 +
                 '\nMisses: ' + body[0].countmiss);
         }
         else {
@@ -714,7 +732,7 @@ function wowstats(bot, message) {
                     'title_url': 'https://na.warships.today/player/' + userMapping[user],
                     'fallback': 'world of warships stats for ' + user,
                     'image_url': 'http://na.warshipstoday.com/signature/' + userMapping[user].split('/')[0] +
-                    '/dark.png'
+                        '/dark.png'
                 }
             ]
         });
@@ -730,7 +748,7 @@ function latex(bot, message) {
             {
                 'fallback': message.match[1],
                 'image_url':
-                'http://latex.codecogs.com/png.latex?%5Cdpi%7B300%7D%20' + encodeURIComponent(message.match[1])
+                    'http://latex.codecogs.com/png.latex?%5Cdpi%7B300%7D%20' + encodeURIComponent(message.match[1])
             }
         ]
     });
@@ -771,7 +789,7 @@ var prevMessage = null;
 
 function antiTritz(bot, message) {
     if (prevMessage && prevMessage.user == 'U1UV8B8UC' && Math.random() < 0.5) {
-        bot.api.reactions.add({'name': 'antitritz', 'channel': prevMessage.channel, 'timestamp': prevMessage.ts});
+        bot.api.reactions.add({ 'name': 'antitritz', 'channel': prevMessage.channel, 'timestamp': prevMessage.ts });
     }
 }
 
@@ -801,7 +819,7 @@ function debugState(bot, message) {
 
 function twitch(bot, message) {
     var channels = ['scootscanoe', 'manlytomb', 'arteezy', 'sing_sing', 'sumaildoto', 'wagamamatv', 'purgegamers'];
-    channels.forEach(function(channel) {
+    channels.forEach(function (channel) {
         request({
             headers: {
                 'Accept': 'application/vnd.twitchtv.v3+json',
@@ -834,7 +852,7 @@ function twitch(bot, message) {
 }
 
 function eve(bot, message) {
-    bot.api.users.info({user: message.user}, function(err, info){
+    bot.api.users.info({ user: message.user }, function (err, info) {
         request({
             url: 'https://script.google.com/macros/s/AKfycby3FMW3ajTZVeHcNcoS5fu4ivuN23naxgSNd_mlCkAmt2yGuyUL/exec?handle=' + info.user.name + '&command=' + message.match[1],
             json: true
@@ -873,14 +891,14 @@ function cloudHelp(bot, message) {
 }
 
 function cloudStatus(bot, message) {
-    exec('docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"', function(error, stdout, stderr) {
+    exec('docker ps -a --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"', function (error, stdout, stderr) {
         bot.reply(message, "```" + stdout + "```");
     });
 }
 
 function cloudRegister(bot, message) {
     var subdomain = message.match[1];
-    bot.api.users.info({user: message.user}, function(err, info){
+    bot.api.users.info({ user: message.user }, function (err, info) {
         request({
             url: 'https://script.google.com/macros/s/AKfycbwytLZ0GR0ttQq66AgwnYmTc2gvQ4o3pAzfVzsXjHT21skQLXj4/exec?action=register&user=' + info.user.name + '&subdomain=' + subdomain,
             json: true
@@ -898,8 +916,8 @@ function cloudRegister(bot, message) {
 function cloudDeploy(bot, message) {
     var subdomain = message.match[1];
     var dockerImage = message.match[2];
-    bot.api.users.info({user: message.user}, function(err, info){
-        deploy(info.user.name, subdomain, dockerImage, function(msg) { bot.reply(message, msg) });
+    bot.api.users.info({ user: message.user }, function (err, info) {
+        deploy(info.user.name, subdomain, dockerImage, function (msg) { bot.reply(message, msg) });
     });
 }
 
@@ -936,10 +954,10 @@ function tarot(bot, message) {
     bot.reply(message, createTarotDeck().slice(0, 3).join(', '));
 }
 
-var defaultContexts= ['ambient', 'direct_message'];
+var defaultContexts = ['ambient', 'direct_message', 'message'];
 
 controller.hears('^!sayhi$', defaultContexts, hello);
-controller.hears('^!echo()(.*)', defaultContexts, echo);
+controller.hears(new RegExp(/^!echo()(.*)/), defaultContexts, echo);
 controller.hears('^!flipcoin$', defaultContexts, flipcoin);
 controller.hears('^!rtd( )?([0-9]+)?$', defaultContexts, rtd);
 controller.hears('^!pickone (.*or.*)$', defaultContexts, pickone);

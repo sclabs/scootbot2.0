@@ -4,11 +4,12 @@
   "description": "custom multi-purpose slack chatbot",
   "main": "app.js",
   "dependencies": {
-    "botkit": "^0.2.2",
+    "botbuilder-adapter-slack": "^1.0.14",
+    "botkit": "^4.15.0",
     "githubhook": "^1.7.1",
-    "pitchfork": "0.0.16"
+    "pitchfork": "0.0.16",
+    "request": "^2.88.2"
   },
-  "devDependencies": {},
   "scripts": {
     "forever": "forever start app.js && forever start updater.js",
     "test": "echo \"Error: no test specified\" && exit 1",
